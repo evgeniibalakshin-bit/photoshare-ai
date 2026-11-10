@@ -98,7 +98,7 @@ if (urlError || !data?.url) {
   preview.hidden = false;
   status.textContent = "Готово! Ссылка действует 7 дней.";
   const a = document.createElement("a");
-  a.href = data.signedUrl;
+a.href = data.url;
   a.textContent = "Открыть фотографию";
   a.target = "_blank";
   link.appendChild(a);
@@ -106,7 +106,7 @@ if (urlError || !data?.url) {
   const copy = document.createElement("button");
   copy.textContent = "Скопировать ссылку";
   copy.onclick = async () => {
-    await navigator.clipboard.writeText(data.signedUrl);
+    await navigator.clipboard.writeText(data.url);
     copy.textContent = "Скопировано!";
   };
   link.appendChild(document.createElement("br"));
