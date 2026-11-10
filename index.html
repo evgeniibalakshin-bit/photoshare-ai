@@ -85,7 +85,7 @@ document.getElementById("upload").addEventListener("click", async () => {
   }
 
 const { data, error: urlError } = await client.functions.invoke(
-  "get-photo-link",
+"index-ts",
   { body: { path } }
 );
 
