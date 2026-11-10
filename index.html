@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PhotoShare AI</title>
+<style>
+body {
+  margin: 0;
+  padding: 25px;
+  background: #101528;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+h1 { color: #a99aff; }
+.card {
+  max-width: 600px;
+  margin: 30px auto;
+  padding: 25px;
+  background: #202944;
+  border-radius: 20px;
+}
+button {
+  padding: 14px 22px;
+  background: #8069f5;
+  color: white;
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 16px;
+}
+img {
+  max-width: 100%;
+  max-height: 300px;
+  margin-top: 15px;
+  border-radius: 12px;
+}
+</style>
+</head>
+<body>
+
+<h1>📸 PhotoShare AI</h1>
+<p>Моя личная фотогалерея</p>
+
+<div class="card">
+  <h2>Добавить фотографию</h2>
+  <input type="file" id="photo" accept="image/*">
+  <div id="gallery"></div>
+  <p id="message">Выбери фотографию ❤️</p>
+</div>
+
+<script>
+const photo = document.getElementById("photo");
+const gallery = document.getElementById("gallery");
+const message = document.getElementById("message");
+
+photo.onchange = () => {
+  const file = photo.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    message.textContent = "Выбери изображение!";
+    return;
+  }
+
+  gallery.innerHTML = "";
+  const img = document.createElement("img");
+  img.src = URL.createObjectURL(file);
+  gallery.appendChild(img);
+  message.textContent = "Фото выбрано! ❤️";
+};
+</script>
+
+</body>
+</html>
