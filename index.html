@@ -84,13 +84,15 @@ document.getElementById("upload").addEventListener("click", async () => {
     return;
   }
 
-  const { data, error: urlError } = await client.storage
-    .from("photos").createSignedUrl(path, 604800);
+const { data, error: urlError } = await client.functions.invoke(
+  "get-photo-link",
+  { body: { path } }
+);
 
-  if (urlError) {
-    status.textContent = "Фото загружено, но ссылку создать не удалось: " + urlError.message;
-    return;
-  }
+if (urlError || !data?.url) {
+  status.textContent = "Ошибка создания ссылки: " + (urlError?.message || "Не удалось получить ссылку");
+  return;
+}
 
   preview.src = URL.createObjectURL(file);
   preview.hidden = false;
