@@ -2,76 +2,114 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PhotoShare AI</title>
-<style>
-body {
-  margin: 0;
-  padding: 25px;
-  background: #101528;
-  color: white;
-  font-family: Arial, sans-serif;
-  text-align: center;
-}
-h1 { color: #a99aff; }
-.card {
-  max-width: 600px;
-  margin: 30px auto;
-  padding: 25px;
-  background: #202944;
-  border-radius: 20px;
-}
-button {
-  padding: 14px 22px;
-  background: #8069f5;
-  color: white;
-  border: 0;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 16px;
-}
-img {
-  max-width: 100%;
-  max-height: 300px;
-  margin-top: 15px;
-  border-radius: 12px;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PhotoShare AI</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f5fa;
+      text-align: center;
+      padding: 30px 15px;
+      color: #222;
+    }
+    main {
+      max-width: 520px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 18px;
+    }
+    button, input {
+      margin: 10px;
+      padding: 12px;
+      font-size: 16px;
+    }
+    button {
+      background: #315bea;
+      color: white;
+      border: 0;
+      border-radius: 9px;
+      cursor: pointer;
+    }
+    img { max-width: 100%; margin-top: 20px; border-radius: 12px; }
+    #status { overflow-wrap: anywhere; }
+  </style>
 </head>
 <body>
+<main>
+  <h1>📸 PhotoShare AI</h1>
+  <p>Загрузи фотографию и получи временную ссылку для ChatGPT.</p>
 
-<h1>📸 PhotoShare AI</h1>
-<p>Моя личная фотогалерея</p>
-
-<div class="card">
-  <h2>Добавить фотографию</h2>
   <input type="file" id="photo" accept="image/*">
-  <div id="gallery"></div>
-  <p id="message">Выбери фотографию ❤️</p>
-</div>
+  <br>
+  <button id="upload">Загрузить фотографию</button>
+  <p id="status"></p>
+  <img id="preview" hidden>
+  <p id="link"></p>
+</main>
 
 <script>
-const photo = document.getElementById("photo");
-const gallery = document.getElementById("gallery");
-const message = document.getElementById("message");
+const SUPABASE_URL = "https://kgynqisvnioddlwzxzpm.supabase.co";
+const SUPABASE_KEY = "sb_publishable_KPb7HGJnAIahzE8j5Jp0XA_MgMH5BW8";
+const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-photo.onchange = () => {
-  const file = photo.files[0];
-  if (!file) return;
+document.getElementById("upload").addEventListener("click", async () => {
+  const file = document.getElementById("photo").files[0];
+  const status = document.getElementById("status");
+  const link = document.getElementById("link");
+  const preview = document.getElementById("preview");
 
-  if (!file.type.startsWith("image/")) {
-    message.textContent = "Выбери изображение!";
+  link.innerHTML = "";
+  if (!file) {
+    status.textContent = "Сначала выбери фотографию.";
+    return;
+  }
+  if (!file.type.startsWith("image/") || file.size > 10 * 1024 * 1024) {
+    status.textContent = "Выбери изображение размером до 10 МБ.";
     return;
   }
 
-  gallery.innerHTML = "";
-  const img = document.createElement("img");
-  img.src = URL.createObjectURL(file);
-  gallery.appendChild(img);
-  message.textContent = "Фото выбрано! ❤️";
-};
-</script>
+  status.textContent = "Загружаю...";
+  const path = crypto.randomUUID() + "-" + file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
 
+  const { error } = await client.storage.from("photos").upload(path, file, {
+    contentType: file.type,
+    upsert: false
+  });
+
+  if (error) {
+    status.textContent = "Ошибка загрузки: " + error.message;
+    return;
+  }
+
+  const { data, error: urlError } = await client.storage
+    .from("photos").createSignedUrl(path, 604800);
+
+  if (urlError) {
+    status.textContent = "Фото загружено, но ссылку создать не удалось: " + urlError.message;
+    return;
+  }
+
+  preview.src = URL.createObjectURL(file);
+  preview.hidden = false;
+  status.textContent = "Готово! Ссылка действует 7 дней.";
+  const a = document.createElement("a");
+  a.href = data.signedUrl;
+  a.textContent = "Открыть фотографию";
+  a.target = "_blank";
+  link.appendChild(a);
+
+  const copy = document.createElement("button");
+  copy.textContent = "Скопировать ссылку";
+  copy.onclick = async () => {
+    await navigator.clipboard.writeText(data.signedUrl);
+    copy.textContent = "Скопировано!";
+  };
+  link.appendChild(document.createElement("br"));
+  link.appendChild(copy);
+});
+</script>
 </body>
 </html>
